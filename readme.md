@@ -1,6 +1,11 @@
-# Manage or test project with webpack :boom:
-#### webpack simple project boilerplate	
-   
+# VBFWinit :sparkles: 
+
+- Vue
+- Bootstrap
+- Firebase
+- Webpack
+
+
 ### Install Dependencies
 ```sh
 $ npm install
@@ -19,7 +24,8 @@ build js and css file in dist dirctory
 $ npm run build
 ```
    
-### Main Dependencies
+### Main Dev Dependencies
+
 * webpack
 * babel
 * sass

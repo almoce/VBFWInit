@@ -26,16 +26,36 @@ module.exports = {
 					presets: ['env']
 				}
 			}
+		},{
+			test:/\.vue/,
+			loader: 'vue-loader',
+			options:{
+				loaders:{
+					'scss': 'vue-style-loader!css-loader!sass-loader',
+					'sass': 'vue-style-loader!css-loader!sass-loader?indentedSyntax'
+				}
+			}
 		}]
 	},
 	plugins: [
 		new ExtractTextPlugin('styles.css'),
 		new HtmlWebpackPlugin({
 			template: 'src/index.html'
+		}),
+		new webpack.DefinePlugin({
+			'process.env': {
+				NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'development')
+			}
 		})
 	],
+	resolve: {
+		alias: {
+			'vue$': 'vue/dist/vue.esm.js'
+		}
+	},
 	devServer: {
 		contentBase: './src',
+		historyApiFallback: true,
 	},
 	performance: {
 		hints: false
@@ -59,7 +79,7 @@ if (process.env.NODE_ENV === 'production') {
 			comments: false
 		}),
 		new webpack.LoaderOptionsPlugin({
-			minimize: true
+			minimize: true,
 		})
 	])
 }
