@@ -18,7 +18,7 @@ $ npm run dev
    
 ### Build production    
    
-build js and css file in dist dirctory
+build js, css and html file in dist dirctory
    
 ```sh
 $ npm run build
