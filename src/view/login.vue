@@ -1,10 +1,10 @@
 <template>
-	<div class="container" v-if="loading">
+	<div class="container">
 		<div class="row align-items-center" v-if="!auth">
 			<div class="col">
 				<h1>{{title}}</h1>
 				<br>
-				<form @submit.prevent="login">
+				<form @submit.prevent="login" novalidate>
 					<div class="form-group" >
 						<label for="email">Email</label>
 						<input type="email" class="form-control" v-model="email">
@@ -29,6 +29,7 @@
 				<button class="btn btn-primary" @click="logout">
 					Logout
 				</button>
+				<router-link to="/upload"><button class="btn btn-success">Go to Upload</button></router-link>
 			</div>			
 		</div>
 	</div>
@@ -36,7 +37,7 @@
 
 
 <script>
-	import {store, firebaseApi} from '../js/api.js';
+	import {store} from '../js/api.js';
 
 	export default{
 		name: 'login',
@@ -52,22 +53,19 @@
 		computed:{
 			auth(){
 				return this.$store.getters.auth;
-			},
-			loading(){
-				return this.$store.getters.loading;
 			}
 		},
 		methods:{
 			login(){
 				this.erro = '';
-				firebaseApi.signInWithEmail(this.email, this.password, (erro) => {
-					return this.erro = erro;
+				this.$store.dispatch('userLogIn', {email:this.email, password:this.password}).then((erro) => {
+					this.erro = erro;
 				})
 			},
 			logout(){
-				firebaseApi.signOut((erro)=>{
-					console.log(erro);
-				});
+				this.$store.dispatch('userLogOut').then((erro)=>{
+					this.erro = erro;
+				})
 			}
 		}
 	}
