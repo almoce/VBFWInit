@@ -31,18 +31,30 @@ const store = new Vuex.Store({
 				});		
 			})
 		},
-		userLogIn({commit}, data) {
+		userLogIn({}, data) {
 			return	new Promise((resolve, reject) => {
 				firebaseApi.signInWithEmail(data.email, data.password, (erro) => {
 					resolve(erro);
 				});	
 			})
 		},
-		userLogOut({commit}) {
+		userLogOut({}) {
 			return new Promise((resolve, reject) => {
 				firebaseApi.signOut((erro) => {
 					resolve(erro);
 				})
+			})
+		},
+		imageUpload({}, file){
+			return new Promise((resolve, reject) => {
+				firebaseApi.imageUpload(file, (sp)=>{
+					resolve(sp);
+				})
+			})
+		},
+		listImages({},ref){
+			return new Promise((resolve,reject) => {
+				
 			})
 		}
 	}

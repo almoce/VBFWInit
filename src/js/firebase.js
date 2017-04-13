@@ -16,7 +16,7 @@ config = key.default;
 
 
 const app = firebase.initializeApp(config);
-const storage = firebase.storage();
+const storageRef = firebase.storage().ref();
 
 // const api = Firebase.database()
 // const fireAuth = firebase.auth();
@@ -45,8 +45,35 @@ const firebaseApi = {
 			// An error happened.
 			return callback(error);
 		});
-		
+	},
+	imageUpload:(file, callback) =>{
+		let folderRef = storageRef.child('images/'+file.name);
+		folderRef.put(file).then(function(snapshot) {
+		  callback(snapshot)
+		});
 	}
 }
+
+
+
+
+
+// GET THE IMAGE URL FROM FIREBASE
+// // Create a reference to the file we want to download
+// var imagesRef = storageRef.child('images/7041606.jpeg');
+
+// // Get the download URL
+// imagesRef.getDownloadURL().then(function(url) {
+// 	console.log(url);
+//   // Insert url into an <img> tag to "download"
+// }).catch(function(error) {
+
+// });
+
+
+
+
+
+
 
 export default firebaseApi
