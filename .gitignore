@@ -1,8 +1,4 @@
 node_modules
 firebasekey.js
 .DS_Store
-dist/bundle.js
-dist/bundle.js.map
-dist/index.html
-dist/styles.css
-dist/styles.css.map
+dist
