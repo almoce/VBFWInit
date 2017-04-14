@@ -3,6 +3,8 @@
 - Vue
 - Bootstrap
 - Firebase
+	- authentication
+	- image upload with folder system (storage and database synchronize)
 - Webpack
 
 
