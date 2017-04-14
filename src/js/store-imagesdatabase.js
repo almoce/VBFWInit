@@ -7,6 +7,12 @@ const imagesDatabase = {
 			'name':'',
 			'key':''
 		},
+		uploadProgress: {
+			'total': 100,
+			'current': 0,
+			'percentage':0,
+			'folder_key': null
+		},
 		folder_system:[],
 		sub_folder_images:[]
 	},
@@ -30,6 +36,12 @@ const imagesDatabase = {
 		},
 		loadFolderImage(state, data){
 			state.sub_folder_images = data ? data:[];
+		},
+		changeProgress(state, data){
+			state.uploadProgress.folder_key = data.folder_key;
+			state.uploadProgress.total = data.count * 100;
+			state.uploadProgress.current = data.current;
+			state.uploadProgress.percentage = (state.uploadProgress.current/state.uploadProgress.total)*100;
 		}
 	},
 	actions:{
@@ -41,23 +53,24 @@ const imagesDatabase = {
 				})			
 			})
 		},
-		imageUpload({state}, file){
-			return new Promise((resolve, reject) => {
-				firebaseApi.imageUpload(state.location, file, (sp)=>{
-					resolve(sp);
-				})
-			})
-		},
 		createFolder({}, name){
 			return new Promise((resolve,reject)=>{
 				firebaseApi.createImageFolder(name);
 				resolve();
 			})
 		},
+		renameFolder({commit, state}, name){
+			firebaseApi.renameImageFolderName(state.location.key, name);
+			let data = {
+				'name': name,
+				'key': state.location.key 
+			}
+			commit('changeLocation', data);
+		},
 		deleteFolder({}, key){
 			firebaseApi.deleteFolder(key);
 		},
-		changeLocation({commit, state}, data){
+		changeLocation({commit}, data){
 			if(data){
 				new Promise((resolve, reject) => {
 					firebaseApi.getImageInFolder(data, (imageData)=>{
@@ -71,7 +84,23 @@ const imagesDatabase = {
 				commit('loadFolderImage');
 			}
 		
-		}
+		},
+		imageUpload({commit, state}, files){
+			return new Promise((resolve, reject) => {
+				let data = {
+					folder_key:state.location.key,
+					count: files.length,
+					current: 0
+				}
+				firebaseApi.imageUpload(state.location.key, files, (progress)=>{
+					data.current = data.current + progress;
+					commit('changeProgress', data);
+					if(data.current >= data.count*100){
+						resolve()
+					}
+				})
+			})
+		},
 	}
 }
 

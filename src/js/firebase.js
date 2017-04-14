@@ -16,11 +16,11 @@ config = key.default;
 
 
 const app = firebase.initializeApp(config);
-const storageRef = firebase.storage().ref();
-const storageDatabase = firebase.database().ref('/storage')
-const imagesStorage = firebase.database().ref('/storage/images')
+const storageRef = firebase.storage().ref('/images');
 
-
+const databaseFolderSystem = firebase.database().ref('/storage/images/folder_system/')
+const databaseFolderImages = firebase.database().ref('/storage/images/folder_images/')
+	
 // const api = Firebase.database()
 // const fireAuth = firebase.auth();
 
@@ -50,70 +50,107 @@ const firebaseApi = {
 		});
 	},
 	getImageStorageDatabase:(callback)=>{
-		imagesStorage.child('folder_system/').on('value', (snapshot) =>{
+		databaseFolderSystem.on('value', (snapshot) =>{
 			return callback(snapshot.val());
 		});
 	},
 	getImageInFolder:(location, callback)=>{
-		imagesStorage.child('folder_images/'+location.key).on('value', (snapshot)=>{
+		databaseFolderImages.child(location.key).on('value', (snapshot)=>{
+			let imageData = [];
+
 			if(location.key){
 				let newCount = snapshot.numChildren();
-				let countRfe = firebase.database().ref('/storage/images/folder_system/'+location.key+'/count');
-				countRfe.transaction((count)=>{
-					return count = newCount;
-				})
+				databaseFolderSystem.child(location.key).update({'count':newCount});
+				if(newCount > 0){
+					for(let itemKey in snapshot.val()){
+						let image = {
+							'id': itemKey,
+							'name': snapshot.val()[itemKey].name,
+							'url': snapshot.val()[itemKey].url
+						}
+						imageData.push(image);
+					}
+				}
 			}
-			return callback(snapshot.val());
+			return callback(imageData);
 		})
 	},
 	createImageFolder:(folderName)=>{
+		let key = databaseFolderSystem.push().key;
 		let newFolder = {
 			'name': folderName,
 			'count': 0
 		}
-		let newKey = imagesStorage.child('folder_system/').push().key;
-		let updates = {}
-		updates['folder_system/' + newKey] = newFolder;
-		updates['folder_images/' + newKey] = '';
-		imagesStorage.update(updates);
-	},
-	deleteFolder:(key)=>{
-		imagesStorage.child('folder_images/'+key).once('value',(snapshot) =>{
-			let temporary = snapshot.val();
-			imagesStorage.child('folder_images/'+key).off();
-			let updates = {}
-			updates['folder_system/' + key] = null;
-			updates['folder_images/' + key] = null;
-			imagesStorage.update(updates);
+		let updates = {
+			folder_system: {},
+			folder_images: {}
+		}
+		updates.folder_system[key] = newFolder;
+		updates.folder_images[key] = '';
 
-			for(let item in temporary){
-				let fileRef = storageRef.child('images/'+key+'/'+temporary[item].name);
-				fileRef.delete().then(()=>{
-				}).catch((erro)=>{
-					console.log(erro);
-				});
+		databaseFolderSystem.update(updates.folder_system);
+		databaseFolderImages.update(updates.folder_images);
+	},
+	renameImageFolderName:(key, name)=>{
+		let databaseLocation = databaseFolderSystem.child(key);
+		databaseLocation.update({'name':name});
+	},
+	deleteFolder:(locationKey)=>{
+		databaseFolderImages.child(locationKey).once('value',(snapshot) =>{
+			let temporary = snapshot.val();
+			let count = snapshot.numChildren();
+			databaseFolderImages.child(locationKey).off();
+			databaseFolderSystem.child(locationKey).remove();
+			databaseFolderImages.child(locationKey).remove();
+			if(count > 0){
+				for(let item in temporary){
+					let fileData = {
+						'key': item,
+						'name':  temporary[item].name
+					}
+					storageRef.child(locationKey+'/'+fileData.key+'/'+fileData.name).delete().then(()=>{
+					
+					}).catch((erro)=>{
+						// console.log(erro);
+					});
+				}
 			}
 		})
 	},
-	imageUpload:(location, file, callback) =>{
-		let folderRef = storageRef.child('images/'+location.key+'/'+file.name);
-		folderRef.put(file).then(function(snapshot) {
-			let newKey = imagesStorage.push().key;
-			let updates = {}
-			let image = {
+	imageUpload:(locationKey, files, callback) =>{
+		let thatCallback = callback;
+		let uploadThisFile = (fileData, callback) => {
+			let uploadTask = storageRef.child(locationKey+'/'+fileData.key+'/'+fileData.name).put(fileData.raw);
+			let progressOldValue = 0;
+			uploadTask.on('state_changed', function(snapshot){
+				let progressNewValue = Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+				let progress = progressNewValue - progressOldValue;
+				progressOldValue = progressNewValue;
+			  	callback(progress);
+			},function(error) {
+			}, function() {
+				let image = {
+					'name': fileData.name,
+					'url': uploadTask.snapshot.downloadURL
+				}
+				let updates = {};
+				updates[fileData.key] = image;
+				databaseFolderImages.child(locationKey).update(updates);
+			})
+		}
+		files.forEach((file)=>{
+			let imageKey = databaseFolderImages.child(locationKey).push().key;
+			let fileData = {
+				key: imageKey,
 				name: file.name,
-				url: snapshot.downloadURL
+				raw: file.file
 			}
-			updates['folder_images/'+location.key+'/'+newKey] = image;
-			imagesStorage.update(updates);
-			callback(snapshot)
-		});
+			uploadThisFile(fileData, (progress)=>{
+				thatCallback(progress);
+			})
+		})
 	}
 }
-
-
-
-
 
 // GET THE IMAGE URL FROM FIREBASE
 // // Create a reference to the file we want to download
@@ -126,10 +163,6 @@ const firebaseApi = {
 // }).catch(function(error) {
 
 // });
-
-
-
-
 
 
 

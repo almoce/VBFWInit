@@ -15,7 +15,15 @@
 						<div class="card-block" @click="gotoFolder(key, folder.name)">
 							<h4 class="card-title">{{folder.name}}</h4>
 							<p class="card-text">{{folder.count}} Files</p>
-							<button class="btn btn-outline-danger btn-sm" @click.stop="deleteFolder(key)">Delete Folder</button>
+							<div v-if="uploadingFolder == key">
+								<button v-if="uploadProgress === 0 || uploadProgress === 100" class="btn btn-outline-danger btn-sm" @click.stop="deleteFolder(key)">Delete Folder</button>
+								<div class="progress" v-else>
+								  <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" v-bind:style="{'width': uploadProgress + '%'}" ></div>
+								</div>	
+							</div>
+							<div v-else>
+								<button class="btn btn-outline-danger btn-sm" @click.stop="deleteFolder(key)">Delete Folder</button>
+							</div>
 						</div>
 					</div>	
 				</div>
@@ -33,12 +41,17 @@
 				</form>
 			</div>
 			<div class="col" v-else>
-				<div class="input-group">
-					<span class="input-group-btn">
-						<button class="btn btn-secondary" type="button" @click="gotoFolder(null)">Back</button>
-					</span>
-					<input type="text" class="form-control" readonly v-bind:value="location">
-				</div>
+				<form @submit.prevent="renameFolder($event)">
+					<div class="input-group">
+						<span class="input-group-btn">
+							<div class="btn-group">
+								<button class="btn btn-secondary" type="button" @click="gotoFolder(null)">Back</button>
+								<button class="btn btn-secondary" type="submit">Rename</button>
+							</div>
+						</span>
+						<input type="text" class="form-control" v-bind:value="folderName">
+					</div>
+				</form>
 			</div>
 		</div>
 		<br>
@@ -61,9 +74,7 @@
 			</div>
 		</div>
 		<br>
-		
-
-		<div class="row" v-if="files">
+		<div class="row" v-if="files.length > 0">
 			<div class="col">
 				<div class="preview">
 					<div class="d-flex  align-items-start flex-wrap">
@@ -72,6 +83,7 @@
 				</div>
 			</div>
 		</div>
+		
 
 		<div class="row" v-if="subfolderImages">
 			<div class="col">
@@ -96,14 +108,14 @@
 			return {
 				title: 'Upload Images',
 				files: [],
-				newFolderName: ''
+				newFolderName: '',
 			}
 		},
 		computed:{
 			folders(){
 				return this.$store.state.imagesDataModlue.folder_system;
 			},
-			location(){
+			folderName(){
 				return this.$store.state.imagesDataModlue.location.name;
 			},
 			subfolder(){
@@ -111,6 +123,12 @@
 			},
 			subfolderImages(){
 				return this.$store.state.imagesDataModlue.sub_folder_images;
+			},
+			uploadProgress(){
+				return this.$store.state.imagesDataModlue.uploadProgress.percentage;
+			},
+			uploadingFolder(){
+				return this.$store.state.imagesDataModlue.uploadProgress.folder_key;
 			}
 		},
 		methods:{
@@ -140,11 +158,9 @@
 				}
 			},
 			upload(){
-				this.files.forEach((file)=>{
-					this.$store.dispatch('imagesDataModlue/imageUpload', file.file).then((sp)=>{
-					})
+				this.$store.dispatch('imagesDataModlue/imageUpload', this.files).then(()=>{
+					this.files = [];
 				})
-				this.files = [];
 			},
 			createFolder(){
 				if(this.newFolderName.length){
@@ -153,10 +169,18 @@
 					});
 				}
 			},
+			renameFolder(e){
+				let name = e.target.querySelector('input').value;
+				if(name){
+					this.$store.dispatch('imagesDataModlue/renameFolder', name);
+				}
+			},
 			deleteFolder(key){
 				if(confirm("Are you sure?")){
 					this.$store.dispatch('imagesDataModlue/deleteFolder', key);
-					this.gotoFolder(null);	
+					if(key === this.subfolder){
+						this.gotoFolder(null);	
+					}
 				}
 			},
 			gotoFolder(key, name){
@@ -164,6 +188,7 @@
 					key:key,
 					name:name
 				}
+				data = data.key ? data:null;
 				this.$store.dispatch('imagesDataModlue/changeLocation', data);
 			}
 		}
@@ -171,6 +196,9 @@
 </script>
 
 <style lang="scss">
+	.progress-bar{
+		transition: all 0.2s;
+	}
 	input[type='file']{
 		display:none;
 	}
@@ -181,9 +209,10 @@
 		margin-right:10px;
 		margin-bottom:10px;
 		cursor:pointer;
+		min-width:150px;
 	}
 	.preview{
-		background:#f2f2f2;
+		border:1px dashed #ccc;
 		img{
 			max-width:10%;
 			margin:15px;
