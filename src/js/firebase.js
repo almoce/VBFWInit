@@ -17,6 +17,9 @@ config = key.default;
 
 const app = firebase.initializeApp(config);
 const storageRef = firebase.storage().ref();
+const storageDatabase = firebase.database().ref('/storage')
+const imagesStorage = firebase.database().ref('/storage/images')
+
 
 // const api = Firebase.database()
 // const fireAuth = firebase.auth();
@@ -46,10 +49,64 @@ const firebaseApi = {
 			return callback(error);
 		});
 	},
-	imageUpload:(file, callback) =>{
-		let folderRef = storageRef.child('images/'+file.name);
+	getImageStorageDatabase:(callback)=>{
+		imagesStorage.child('folder_system/').on('value', (snapshot) =>{
+			return callback(snapshot.val());
+		});
+	},
+	getImageInFolder:(location, callback)=>{
+		imagesStorage.child('folder_images/'+location.key).on('value', (snapshot)=>{
+			if(location.key){
+				let newCount = snapshot.numChildren();
+				let countRfe = firebase.database().ref('/storage/images/folder_system/'+location.key+'/count');
+				countRfe.transaction((count)=>{
+					return count = newCount;
+				})
+			}
+			return callback(snapshot.val());
+		})
+	},
+	createImageFolder:(folderName)=>{
+		let newFolder = {
+			'name': folderName,
+			'count': 0
+		}
+		let newKey = imagesStorage.child('folder_system/').push().key;
+		let updates = {}
+		updates['folder_system/' + newKey] = newFolder;
+		updates['folder_images/' + newKey] = '';
+		imagesStorage.update(updates);
+	},
+	deleteFolder:(key)=>{
+		imagesStorage.child('folder_images/'+key).once('value',(snapshot) =>{
+			let temporary = snapshot.val();
+			imagesStorage.child('folder_images/'+key).off();
+			let updates = {}
+			updates['folder_system/' + key] = null;
+			updates['folder_images/' + key] = null;
+			imagesStorage.update(updates);
+
+			for(let item in temporary){
+				let fileRef = storageRef.child('images/'+key+'/'+temporary[item].name);
+				fileRef.delete().then(()=>{
+				}).catch((erro)=>{
+					console.log(erro);
+				});
+			}
+		})
+	},
+	imageUpload:(location, file, callback) =>{
+		let folderRef = storageRef.child('images/'+location.key+'/'+file.name);
 		folderRef.put(file).then(function(snapshot) {
-		  callback(snapshot)
+			let newKey = imagesStorage.push().key;
+			let updates = {}
+			let image = {
+				name: file.name,
+				url: snapshot.downloadURL
+			}
+			updates['folder_images/'+location.key+'/'+newKey] = image;
+			imagesStorage.update(updates);
+			callback(snapshot)
 		});
 	}
 }

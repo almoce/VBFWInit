@@ -13,7 +13,12 @@ const router = new Router({
 	routes: [{
 		path:'/upload',
 		name:'upload',
-		component: Upload
+		component: Upload,
+		beforeEnter:(to, from, next) =>{
+			store.dispatch('imagesDataModlue/dataInit').then(()=>{
+				next();
+			});
+		}
 	},{
 		path: '/login',
 		name:'login',
@@ -31,9 +36,9 @@ const router = new Router({
 const protectedRouterNames = ['upload']
 
 router.beforeEach((to, from, next) => {
-	store.dispatch('authCheck').then(() => {		
+	store.dispatch('authModule/authCheck').then(() => {		
 		if(protectedRouterNames.indexOf(to.name) != -1){
-			if(store.getters.auth){
+			if(store.getters['authModule/auth']){
 				next()
 			} else {
 				next('login')

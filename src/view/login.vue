@@ -52,18 +52,18 @@
 		},
 		computed:{
 			auth(){
-				return this.$store.getters.auth;
+				return this.$store.getters['authModule/auth'];
 			}
 		},
 		methods:{
 			login(){
 				this.erro = '';
-				this.$store.dispatch('userLogIn', {email:this.email, password:this.password}).then((erro) => {
+				this.$store.dispatch('authModule/userLogIn', {email:this.email, password:this.password}).then((erro) => {
 					this.erro = erro;
 				})
 			},
 			logout(){
-				this.$store.dispatch('userLogOut').then((erro)=>{
+				this.$store.dispatch('authModule/userLogOut').then((erro)=>{
 					this.erro = erro;
 				})
 			}
