@@ -3,8 +3,9 @@ import Router from 'vue-router'
 import {store} from './api.js'
 
 // VIEW MODULE
-import{App, Login, Upload} from '../view'
+import{App, Nav, Login, Upload} from '../view'
 
+Vue.component('nav-bar', Nav)
 
 Vue.use(Router);
 
@@ -24,6 +25,14 @@ const router = new Router({
 		name:'login',
 		component: Login
 	}, {
+		path: '/logout',
+		name:'logout',
+		beforeEnter:(to, from, next)=>{
+			store.dispatch('authModule/userLogOut').then(()=>{
+			})
+			next('home');
+		}
+	},{
 		path: '/',
 		name: 'home',
 		component: App

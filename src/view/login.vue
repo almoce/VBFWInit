@@ -75,8 +75,4 @@
 	.container{
 		max-width: 450px;
 	}
-	.row{
-		height: 100vh;
-		
-	}
 </style>

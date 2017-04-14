@@ -1,3 +1,27 @@
+@font-face {
+    font-family: CustomFont;
+    src: url(/assets/font/Quicksand-Bold.ttf);
+}
+@font-face {
+    font-family: CustomFont;
+    src: url(/assets/font/Quicksand-Regular.ttf);
+    font-weight: bold;
+}
+body{
+	font-family: CustomFont,Roboto,Helvetica,Arial,sans-serif;
+}
+
+h1{
+	font-weight:bold;
+}
+
 .noselect{
 	user-select: none;
+}
+
+.navbar-nav .nav-link.router-link-active{
+	color:red;
+}
+.container{
+	padding-top:50px;
 }

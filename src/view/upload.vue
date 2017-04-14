@@ -2,14 +2,6 @@
 	<div class="container">
 		<div class="row">
 			<div class="col">
-				<h1>{{title}}</h1>
-			</div>
-			<div class="col text-right">
-				<router-link to="/"><button class="btn btn-secondary">Back to Home</button></router-link>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col">
 				<div class="d-flex flex-row flex-wrap">
 					<div class="bg-faded card" v-for="(folder, key) in folders" v-bind:class="{'bg-inverse text-white': subfolder == key}">
 						<div class="card-block" @click="gotoFolder(key, folder.name)">
@@ -83,8 +75,7 @@
 				</div>
 			</div>
 		</div>
-		
-
+		<br>
 		<div class="row" v-if="subfolderImages">
 			<div class="col">
 				<div class="folder-image">
@@ -94,6 +85,7 @@
 				</div>
 			</div>
 		</div>
+		<br>
 	</div>
 </template>
 
