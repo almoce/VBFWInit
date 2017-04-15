@@ -1,5 +1,6 @@
 var path = require('path'),
 	webpack = require('webpack'),
+	CopyWebpackPlugin = require('copy-webpack-plugin'),
 	ExtractTextPlugin = require('extract-text-webpack-plugin'),
 	HtmlWebpackPlugin = require('html-webpack-plugin');
 
@@ -84,6 +85,9 @@ if (process.env.NODE_ENV === 'production') {
 		}),
 		new webpack.LoaderOptionsPlugin({
 			minimize: true,
-		})
+		}),
+		new CopyWebpackPlugin([
+		    { from: 'src/assets', to: 'assets' }
+		]),
 	])
 }
